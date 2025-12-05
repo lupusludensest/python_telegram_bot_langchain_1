@@ -20,13 +20,13 @@ llm = ChatOpenAI(
     openai_api_key=os.getenv('DEEPSEEK_API_KEY'),
     openai_api_base="https://api.deepseek.com/v1",
     model_name="deepseek-chat",
-    temperature=0.7
+    temperature=0.3
 )
 
 async def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     await update.message.reply_text(
-        'Hello! I am your AI assistant powered by DeepSeek! 🤖\n'
+        'Hi! I am your Vic GUROV`s AI agent powered by DeepSeek. 🤖\n'
         'Send me any question and I\'ll help you with an intelligent response.'
     )
 
