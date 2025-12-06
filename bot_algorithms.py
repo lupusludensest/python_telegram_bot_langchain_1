@@ -92,7 +92,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Start the bot
-    logger.info("Starting Telegram Bot with DeepSeek AI...")
+    logger.info("Starting Vic GUROV\'s AI elegram Bot powered by DeepSeek.")
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
