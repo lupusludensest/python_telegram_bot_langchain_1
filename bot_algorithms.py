@@ -44,28 +44,65 @@ Just send me any text message and I'll respond with AI-powered answers using Dee
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
     """Handle text messages with DeepSeek AI."""
-    user_message = update.message.text
-    user_name = update.effective_user.first_name
-    
-    # Log the incoming message
-    logger.info(f"User {user_name}: {user_message}")
-    
+    user_message = update.message.text or ""
+    user_name = update.effective_user.first_name if update.effective_user else "Unknown"
+    chat_id = update.effective_chat.id if update.effective_chat else None
+
+    # Rate limiting: allow one message per 2 seconds per user (simple in-memory)
+    if not hasattr(context, 'user_data'):
+        context.user_data = {}
+    last_time = context.user_data.get('last_message_time', 0)
+    import time
+    now = time.time()
+    if now - last_time < 2:
+        await update.message.reply_text("⏳ Please wait a moment before sending another message.")
+        return
+    context.user_data['last_message_time'] = now
+
+    # Input validation
+    if not user_message.strip():
+        await update.message.reply_text("⚠️ Please send a non-empty message.")
+        return
+    if len(user_message.strip()) < 2:
+        await update.message.reply_text("⚠️ Your message is too short. Please provide more details.")
+        return
+
+    # Multi-language support (detect language, respond accordingly)
+    import langdetect
     try:
+        lang = langdetect.detect(user_message)
+    except Exception:
+        lang = "en"
+
+    # Custom prompt support (simple role setting)
+    role = context.user_data.get('role', None)
+    prompt = user_message
+    if role:
+        prompt = f"You are a helpful assistant. Role: {role}. User says: {user_message}"
+
+    # Log the incoming message
+    logger.info(f"User {user_name} ({lang}): {user_message}")
+
+    try:
+        # User feedback: show processing message
+        await update.message.reply_text("🤔 Thinking...", quote=True)
         # Send "typing" action to show bot is processing
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-        
+        if chat_id:
+            await context.bot.send_chat_action(chat_id=chat_id, action="typing")
+
         # Get response from DeepSeek
-        response = await llm.agenerate([[HumanMessage(content=user_message)]])
+        response = await llm.agenerate([[HumanMessage(content=prompt)]])
         ai_response = response.generations[0][0].text
-        
+
+        # Response formatting: Markdown support
+        await update.message.reply_text(ai_response, parse_mode='Markdown')
+
         # Log the AI response
         logger.info(f"AI Response: {ai_response[:100]}...")
-        
-        # Send response to user
-        await update.message.reply_text(ai_response)
-        
+
     except Exception as e:
-        logger.error(f"Error processing message: {str(e)}")
+        import traceback
+        logger.error(f"Error processing message: {str(e)}\n{traceback.format_exc()}")
         await update.message.reply_text(
             "Sorry, I encountered an error while processing your message. Please try again later."
         )
