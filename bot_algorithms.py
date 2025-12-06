@@ -26,8 +26,8 @@ llm = ChatOpenAI(
 async def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     await update.message.reply_text(
-        'Hi! I am your Vic GUROV`s AI agent powered by DeepSeek. 🤖\n'
-        'Send me any question and I\'ll help you with an intelligent response.'
+        'Hi! I am Vic GUROV\'s AI agent powered by DeepSeek. 🤖\n'
+        'Ask me any question and I\'ll help you with an intelligent response.'
     )
 
 async def help_command(update: Update, context: CallbackContext) -> None:
